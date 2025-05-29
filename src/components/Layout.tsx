@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Camera, Home, Trophy, Settings, LogOut } from 'lucide-react';
+import { Camera, Home, Trophy, Settings, LogOut, BookOpen } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface LayoutProps {
@@ -34,6 +34,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <Home size={24} />
             <span>ホーム</span>
+          </NavLink>
+          
+          <NavLink 
+            to="/recipe-book" 
+            className={({ isActive }) => 
+              `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                isActive ? 'bg-secondary/10 text-secondary' : 'text-gray-700 hover:bg-gray-50'
+              }`
+            }
+          >
+            <BookOpen size={24} />
+            <span>料理本</span>
           </NavLink>
           
           <NavLink 
@@ -114,14 +126,26 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </NavLink>
           
           <NavLink 
-            to="/upload" 
+            to="/recipe-book" 
             className={({ isActive }) => 
-              `flex flex-col items-center py-3 px-6 ${
+              `flex flex-col items-center py-3 px-4 ${
                 isActive ? 'text-secondary' : 'text-gray-700'
               }`
             }
           >
-            <Camera size={24} />
+            <BookOpen size={20} />
+            <span className="text-xs mt-1">料理本</span>
+          </NavLink>
+          
+          <NavLink 
+            to="/upload" 
+            className={({ isActive }) => 
+              `flex flex-col items-center py-3 px-4 ${
+                isActive ? 'text-secondary' : 'text-gray-700'
+              }`
+            }
+          >
+            <Camera size={20} />
             <span className="text-xs mt-1">投稿</span>
           </NavLink>
           

@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
+import RecipeBookPage from './pages/RecipeBookPage';
 import UploadPage from './pages/UploadPage';
 import RankingPage from './pages/RankingPage';
 import SettingsPage from './pages/SettingsPage';
@@ -13,6 +14,7 @@ function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/recipe-book" element={<RecipeBookPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/ranking/:period" element={<RankingPage />} />
           <Route path="/settings" element={<SettingsPage />} />
