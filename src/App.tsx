@@ -7,6 +7,7 @@ import UploadPage from './pages/UploadPage';
 import RankingPage from './pages/RankingPage';
 import SettingsPage from './pages/SettingsPage';
 import AuthPage from './pages/AuthPage';
+import HungryPage from './pages/HungryPage';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path="/ranking/:period" element={<RankingPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/hungry" element={<HungryPage />} />
         </Routes>
       </Layout>
     </Router>
