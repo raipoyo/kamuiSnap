@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Camera, Home, Trophy, Settings, LogOut, BookOpen } from 'lucide-react';
+import { Camera, Home, Trophy, Settings, LogOut, BookOpen, Book } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface LayoutProps {
@@ -46,6 +46,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <BookOpen size={24} />
             <span>料理本</span>
+          </NavLink>
+
+          <NavLink 
+            to="/story" 
+            className={({ isActive }) => 
+              `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                isActive ? 'bg-secondary/10 text-secondary' : 'text-gray-700 hover:bg-gray-50'
+              }`
+            }
+          >
+            <Book size={24} />
+            <span>🐱 開発猫物語</span>
           </NavLink>
           
           <NavLink 
@@ -128,13 +140,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <NavLink 
             to="/recipe-book" 
             className={({ isActive }) => 
-              `flex flex-col items-center py-3 px-4 ${
+              `flex flex-col items-center py-3 px-2 ${
                 isActive ? 'text-secondary' : 'text-gray-700'
               }`
             }
           >
-            <BookOpen size={20} />
+            <BookOpen size={18} />
             <span className="text-xs mt-1">料理本</span>
+          </NavLink>
+
+          <NavLink 
+            to="/story" 
+            className={({ isActive }) => 
+              `flex flex-col items-center py-3 px-2 ${
+                isActive ? 'text-secondary' : 'text-gray-700'
+              }`
+            }
+          >
+            <Book size={18} />
+            <span className="text-xs mt-1">🐱物語</span>
           </NavLink>
           
           <NavLink 
