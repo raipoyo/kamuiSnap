@@ -50,3 +50,6 @@ export interface Ingredient {
   amount: string;
   unit: string;
 }
+
+// Re-export DevCat types
+export * from './devCat';

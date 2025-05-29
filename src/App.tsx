@@ -7,6 +7,7 @@ import UploadPage from './pages/UploadPage';
 import RankingPage from './pages/RankingPage';
 import SettingsPage from './pages/SettingsPage';
 import AuthPage from './pages/AuthPage';
+import DevCatStoryPage from './pages/DevCatStoryPage';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path="/recipe-book" element={<RecipeBookPage />} />
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/ranking/:period" element={<RankingPage />} />
+          <Route path="/dev-cat-story" element={<DevCatStoryPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/auth" element={<AuthPage />} />
         </Routes>
