@@ -1,6 +1,6 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Camera, Home, Trophy, Settings, LogOut, BookOpen } from 'lucide-react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { Camera, Home, Trophy, Settings, LogOut, BookOpen, Utensils } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
 interface LayoutProps {
@@ -10,6 +10,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -72,6 +73,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <Trophy size={24} />
             <span>ランキング</span>
+          </NavLink>
+          
+          <NavLink 
+            to="/hungry" 
+            className={({ isActive }) => 
+              `flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                isActive ? 'bg-secondary/10 text-secondary' : 'text-gray-700 hover:bg-gray-50'
+              }`
+            }
+          >
+            <Utensils size={24} />
+            <span>お腹すいた</span>
           </NavLink>
 
           {user && (
@@ -152,15 +165,27 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <NavLink 
             to="/ranking/weekly" 
             className={({ isActive }) => 
-              `flex flex-col items-center py-3 px-6 ${
+              `flex flex-col items-center py-3 px-4 ${
                 isActive || location.pathname.includes('/ranking') 
                   ? 'text-secondary' 
                   : 'text-gray-700'
               }`
             }
           >
-            <Trophy size={24} />
+            <Trophy size={20} />
             <span className="text-xs mt-1">ランキング</span>
+          </NavLink>
+          
+          <NavLink 
+            to="/hungry" 
+            className={({ isActive }) => 
+              `flex flex-col items-center py-3 px-4 ${
+                isActive ? 'text-secondary' : 'text-gray-700'
+              }`
+            }
+          >
+            <Utensils size={20} />
+            <span className="text-xs mt-1">お腹すいた</span>
           </NavLink>
 
           {user && (
