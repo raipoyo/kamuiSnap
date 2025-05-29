@@ -1,8 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Image, Film, Upload, Palette, Cat, Mountain, Loader2, AlertCircle } from 'lucide-react';
+import { Image, Film, Upload, Palette, Cat, Mountain, ChefHat, Loader2, AlertCircle } from 'lucide-react';
 import { addPost } from '../services/postService';
 import { Post } from '../types';
+import RecipeForm from '../components/RecipeForm';
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 const MAX_VIDEO_DURATION = 180; // 3 minutes in seconds
@@ -19,6 +20,7 @@ const UploadPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showRecipeForm, setShowRecipeForm] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -130,6 +132,28 @@ const UploadPage: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleRecipeSuccess = () => {
+    setShowToast(true);
+    setTimeout(() => {
+      setShowToast(false);
+      navigate('/recipe-book', { replace: true });
+    }, 1500);
+  };
+
+  const handleRecipeCancel = () => {
+    setShowRecipeForm(false);
+    setCategory('anime');
+  };
+
+  if (showRecipeForm) {
+    return (
+      <RecipeForm 
+        onSuccess={handleRecipeSuccess}
+        onCancel={handleRecipeCancel}
+      />
+    );
+  }
   
   return (
     <div className="max-w-2xl mx-auto">
@@ -230,7 +254,7 @@ const UploadPage: React.FC = () => {
             <label className="block text-gray-700 font-medium mb-2">
               カテゴリー
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <button
                 type="button"
                 onClick={() => setCategory('anime')}
@@ -266,6 +290,21 @@ const UploadPage: React.FC = () => {
               >
                 <Mountain size={20} />
                 <span>風景</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCategory('recipe');
+                  setShowRecipeForm(true);
+                }}
+                className={`py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                  category === 'recipe'
+                    ? 'bg-secondary/10 text-secondary'
+                    : 'text-gray-500 hover:bg-gray-50'
+                }`}
+              >
+                <ChefHat size={20} />
+                <span>レシピ</span>
               </button>
             </div>
           </div>

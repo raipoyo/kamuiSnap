@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { Post } from '../types';
+import { Post, Recipe } from '../types';
 
 const uploadMedia = async (file: File): Promise<string> => {
   const fileExt = file.name.split('.').pop();
@@ -56,6 +56,151 @@ export const getPosts = async (): Promise<Post[]> => {
   return postsWithUsers;
 };
 
+export const getRecipePosts = async (): Promise<Post[]> => {
+  const { data: posts, error } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      user_id,
+      media_url,
+      media_type,
+      category,
+      caption,
+      created_at,
+      likes,
+      likes:likes(id, user_id),
+      recipes(
+        id,
+        post_id,
+        title,
+        description,
+        ingredients,
+        steps,
+        cooking_time,
+        servings,
+        meal_type,
+        storage_type,
+        storage_days,
+        difficulty,
+        tags,
+        created_at,
+        updated_at
+      )
+    `)
+    .eq('category', 'recipe')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Fetch user data and format recipe data for each post
+  const postsWithUsersAndRecipes = await Promise.all((posts || []).map(async (post) => {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id, username, display_name, avatar_url')
+      .eq('id', post.user_id)
+      .single();
+
+    const recipe = post.recipes?.[0] ? {
+      id: post.recipes[0].id,
+      postId: post.recipes[0].post_id,
+      title: post.recipes[0].title,
+      description: post.recipes[0].description,
+      ingredients: post.recipes[0].ingredients,
+      steps: post.recipes[0].steps,
+      cookingTime: post.recipes[0].cooking_time,
+      servings: post.recipes[0].servings,
+      mealType: post.recipes[0].meal_type,
+      storageType: post.recipes[0].storage_type,
+      storageDays: post.recipes[0].storage_days,
+      difficulty: post.recipes[0].difficulty,
+      tags: post.recipes[0].tags,
+      createdAt: post.recipes[0].created_at,
+      updatedAt: post.recipes[0].updated_at,
+    } : undefined;
+
+    return {
+      ...post,
+      user: userData,
+      recipe
+    };
+  }));
+
+  return postsWithUsersAndRecipes;
+};
+
+export const addRecipePost = async (
+  post: { 
+    mediaFile: File; 
+    mediaType: 'image' | 'video'; 
+    caption: string 
+  },
+  recipe: Omit<Recipe, 'id' | 'postId' | 'createdAt' | 'updatedAt'>
+): Promise<Post> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Upload media file to storage
+  const mediaUrl = await uploadMedia(post.mediaFile);
+
+  // Create post record
+  const { data: postData, error: postError } = await supabase
+    .from('posts')
+    .insert({
+      user_id: user.id,
+      media_url: mediaUrl,
+      media_type: post.mediaType,
+      category: 'recipe',
+      caption: post.caption
+    })
+    .select()
+    .single();
+
+  if (postError) throw postError;
+
+  // Create recipe record
+  const { data: recipeData, error: recipeError } = await supabase
+    .from('recipes')
+    .insert({
+      post_id: postData.id,
+      title: recipe.title,
+      description: recipe.description,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      cooking_time: recipe.cookingTime,
+      servings: recipe.servings,
+      meal_type: recipe.mealType,
+      storage_type: recipe.storageType,
+      storage_days: recipe.storageDays,
+      difficulty: recipe.difficulty,
+      tags: recipe.tags
+    })
+    .select()
+    .single();
+
+  if (recipeError) throw recipeError;
+
+  return {
+    ...postData,
+    recipe: {
+      id: recipeData.id,
+      postId: recipeData.post_id,
+      title: recipeData.title,
+      description: recipeData.description,
+      ingredients: recipeData.ingredients,
+      steps: recipeData.steps,
+      cookingTime: recipeData.cooking_time,
+      servings: recipeData.servings,
+      mealType: recipeData.meal_type,
+      storageType: recipeData.storage_type,
+      storageDays: recipeData.storage_days,
+      difficulty: recipeData.difficulty,
+      tags: recipeData.tags,
+      createdAt: recipeData.created_at,
+      updatedAt: recipeData.updated_at,
+    }
+  };
+};
+
 export const getRecentPosts = async (): Promise<Post[]> => {
   const { data: posts, error } = await supabase
     .from('posts')
@@ -90,6 +235,151 @@ export const getRecentPosts = async (): Promise<Post[]> => {
   }));
 
   return postsWithUsers;
+};
+
+export const getRecipePosts = async (): Promise<Post[]> => {
+  const { data: posts, error } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      user_id,
+      media_url,
+      media_type,
+      category,
+      caption,
+      created_at,
+      likes,
+      likes:likes(id, user_id),
+      recipes(
+        id,
+        post_id,
+        title,
+        description,
+        ingredients,
+        steps,
+        cooking_time,
+        servings,
+        meal_type,
+        storage_type,
+        storage_days,
+        difficulty,
+        tags,
+        created_at,
+        updated_at
+      )
+    `)
+    .eq('category', 'recipe')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Fetch user data and format recipe data for each post
+  const postsWithUsersAndRecipes = await Promise.all((posts || []).map(async (post) => {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id, username, display_name, avatar_url')
+      .eq('id', post.user_id)
+      .single();
+
+    const recipe = post.recipes?.[0] ? {
+      id: post.recipes[0].id,
+      postId: post.recipes[0].post_id,
+      title: post.recipes[0].title,
+      description: post.recipes[0].description,
+      ingredients: post.recipes[0].ingredients,
+      steps: post.recipes[0].steps,
+      cookingTime: post.recipes[0].cooking_time,
+      servings: post.recipes[0].servings,
+      mealType: post.recipes[0].meal_type,
+      storageType: post.recipes[0].storage_type,
+      storageDays: post.recipes[0].storage_days,
+      difficulty: post.recipes[0].difficulty,
+      tags: post.recipes[0].tags,
+      createdAt: post.recipes[0].created_at,
+      updatedAt: post.recipes[0].updated_at,
+    } : undefined;
+
+    return {
+      ...post,
+      user: userData,
+      recipe
+    };
+  }));
+
+  return postsWithUsersAndRecipes;
+};
+
+export const addRecipePost = async (
+  post: { 
+    mediaFile: File; 
+    mediaType: 'image' | 'video'; 
+    caption: string 
+  },
+  recipe: Omit<Recipe, 'id' | 'postId' | 'createdAt' | 'updatedAt'>
+): Promise<Post> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Upload media file to storage
+  const mediaUrl = await uploadMedia(post.mediaFile);
+
+  // Create post record
+  const { data: postData, error: postError } = await supabase
+    .from('posts')
+    .insert({
+      user_id: user.id,
+      media_url: mediaUrl,
+      media_type: post.mediaType,
+      category: 'recipe',
+      caption: post.caption
+    })
+    .select()
+    .single();
+
+  if (postError) throw postError;
+
+  // Create recipe record
+  const { data: recipeData, error: recipeError } = await supabase
+    .from('recipes')
+    .insert({
+      post_id: postData.id,
+      title: recipe.title,
+      description: recipe.description,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      cooking_time: recipe.cookingTime,
+      servings: recipe.servings,
+      meal_type: recipe.mealType,
+      storage_type: recipe.storageType,
+      storage_days: recipe.storageDays,
+      difficulty: recipe.difficulty,
+      tags: recipe.tags
+    })
+    .select()
+    .single();
+
+  if (recipeError) throw recipeError;
+
+  return {
+    ...postData,
+    recipe: {
+      id: recipeData.id,
+      postId: recipeData.post_id,
+      title: recipeData.title,
+      description: recipeData.description,
+      ingredients: recipeData.ingredients,
+      steps: recipeData.steps,
+      cookingTime: recipeData.cooking_time,
+      servings: recipeData.servings,
+      mealType: recipeData.meal_type,
+      storageType: recipeData.storage_type,
+      storageDays: recipeData.storage_days,
+      difficulty: recipeData.difficulty,
+      tags: recipeData.tags,
+      createdAt: recipeData.created_at,
+      updatedAt: recipeData.updated_at,
+    }
+  };
 };
 
 export const addPost = async (
@@ -220,6 +510,151 @@ export const getWeeklyPopularPosts = async (
   return postsWithUsers;
 };
 
+export const getRecipePosts = async (): Promise<Post[]> => {
+  const { data: posts, error } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      user_id,
+      media_url,
+      media_type,
+      category,
+      caption,
+      created_at,
+      likes,
+      likes:likes(id, user_id),
+      recipes(
+        id,
+        post_id,
+        title,
+        description,
+        ingredients,
+        steps,
+        cooking_time,
+        servings,
+        meal_type,
+        storage_type,
+        storage_days,
+        difficulty,
+        tags,
+        created_at,
+        updated_at
+      )
+    `)
+    .eq('category', 'recipe')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Fetch user data and format recipe data for each post
+  const postsWithUsersAndRecipes = await Promise.all((posts || []).map(async (post) => {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id, username, display_name, avatar_url')
+      .eq('id', post.user_id)
+      .single();
+
+    const recipe = post.recipes?.[0] ? {
+      id: post.recipes[0].id,
+      postId: post.recipes[0].post_id,
+      title: post.recipes[0].title,
+      description: post.recipes[0].description,
+      ingredients: post.recipes[0].ingredients,
+      steps: post.recipes[0].steps,
+      cookingTime: post.recipes[0].cooking_time,
+      servings: post.recipes[0].servings,
+      mealType: post.recipes[0].meal_type,
+      storageType: post.recipes[0].storage_type,
+      storageDays: post.recipes[0].storage_days,
+      difficulty: post.recipes[0].difficulty,
+      tags: post.recipes[0].tags,
+      createdAt: post.recipes[0].created_at,
+      updatedAt: post.recipes[0].updated_at,
+    } : undefined;
+
+    return {
+      ...post,
+      user: userData,
+      recipe
+    };
+  }));
+
+  return postsWithUsersAndRecipes;
+};
+
+export const addRecipePost = async (
+  post: { 
+    mediaFile: File; 
+    mediaType: 'image' | 'video'; 
+    caption: string 
+  },
+  recipe: Omit<Recipe, 'id' | 'postId' | 'createdAt' | 'updatedAt'>
+): Promise<Post> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Upload media file to storage
+  const mediaUrl = await uploadMedia(post.mediaFile);
+
+  // Create post record
+  const { data: postData, error: postError } = await supabase
+    .from('posts')
+    .insert({
+      user_id: user.id,
+      media_url: mediaUrl,
+      media_type: post.mediaType,
+      category: 'recipe',
+      caption: post.caption
+    })
+    .select()
+    .single();
+
+  if (postError) throw postError;
+
+  // Create recipe record
+  const { data: recipeData, error: recipeError } = await supabase
+    .from('recipes')
+    .insert({
+      post_id: postData.id,
+      title: recipe.title,
+      description: recipe.description,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      cooking_time: recipe.cookingTime,
+      servings: recipe.servings,
+      meal_type: recipe.mealType,
+      storage_type: recipe.storageType,
+      storage_days: recipe.storageDays,
+      difficulty: recipe.difficulty,
+      tags: recipe.tags
+    })
+    .select()
+    .single();
+
+  if (recipeError) throw recipeError;
+
+  return {
+    ...postData,
+    recipe: {
+      id: recipeData.id,
+      postId: recipeData.post_id,
+      title: recipeData.title,
+      description: recipeData.description,
+      ingredients: recipeData.ingredients,
+      steps: recipeData.steps,
+      cookingTime: recipeData.cooking_time,
+      servings: recipeData.servings,
+      mealType: recipeData.meal_type,
+      storageType: recipeData.storage_type,
+      storageDays: recipeData.storage_days,
+      difficulty: recipeData.difficulty,
+      tags: recipeData.tags,
+      createdAt: recipeData.created_at,
+      updatedAt: recipeData.updated_at,
+    }
+  };
+};
+
 export const getMonthlyPopularPosts = async (
   mediaType?: 'image' | 'video',
   category?: Post['category']
@@ -269,4 +704,149 @@ export const getMonthlyPopularPosts = async (
   }));
 
   return postsWithUsers;
+};
+
+export const getRecipePosts = async (): Promise<Post[]> => {
+  const { data: posts, error } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      user_id,
+      media_url,
+      media_type,
+      category,
+      caption,
+      created_at,
+      likes,
+      likes:likes(id, user_id),
+      recipes(
+        id,
+        post_id,
+        title,
+        description,
+        ingredients,
+        steps,
+        cooking_time,
+        servings,
+        meal_type,
+        storage_type,
+        storage_days,
+        difficulty,
+        tags,
+        created_at,
+        updated_at
+      )
+    `)
+    .eq('category', 'recipe')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  // Fetch user data and format recipe data for each post
+  const postsWithUsersAndRecipes = await Promise.all((posts || []).map(async (post) => {
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id, username, display_name, avatar_url')
+      .eq('id', post.user_id)
+      .single();
+
+    const recipe = post.recipes?.[0] ? {
+      id: post.recipes[0].id,
+      postId: post.recipes[0].post_id,
+      title: post.recipes[0].title,
+      description: post.recipes[0].description,
+      ingredients: post.recipes[0].ingredients,
+      steps: post.recipes[0].steps,
+      cookingTime: post.recipes[0].cooking_time,
+      servings: post.recipes[0].servings,
+      mealType: post.recipes[0].meal_type,
+      storageType: post.recipes[0].storage_type,
+      storageDays: post.recipes[0].storage_days,
+      difficulty: post.recipes[0].difficulty,
+      tags: post.recipes[0].tags,
+      createdAt: post.recipes[0].created_at,
+      updatedAt: post.recipes[0].updated_at,
+    } : undefined;
+
+    return {
+      ...post,
+      user: userData,
+      recipe
+    };
+  }));
+
+  return postsWithUsersAndRecipes;
+};
+
+export const addRecipePost = async (
+  post: { 
+    mediaFile: File; 
+    mediaType: 'image' | 'video'; 
+    caption: string 
+  },
+  recipe: Omit<Recipe, 'id' | 'postId' | 'createdAt' | 'updatedAt'>
+): Promise<Post> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // Upload media file to storage
+  const mediaUrl = await uploadMedia(post.mediaFile);
+
+  // Create post record
+  const { data: postData, error: postError } = await supabase
+    .from('posts')
+    .insert({
+      user_id: user.id,
+      media_url: mediaUrl,
+      media_type: post.mediaType,
+      category: 'recipe',
+      caption: post.caption
+    })
+    .select()
+    .single();
+
+  if (postError) throw postError;
+
+  // Create recipe record
+  const { data: recipeData, error: recipeError } = await supabase
+    .from('recipes')
+    .insert({
+      post_id: postData.id,
+      title: recipe.title,
+      description: recipe.description,
+      ingredients: recipe.ingredients,
+      steps: recipe.steps,
+      cooking_time: recipe.cookingTime,
+      servings: recipe.servings,
+      meal_type: recipe.mealType,
+      storage_type: recipe.storageType,
+      storage_days: recipe.storageDays,
+      difficulty: recipe.difficulty,
+      tags: recipe.tags
+    })
+    .select()
+    .single();
+
+  if (recipeError) throw recipeError;
+
+  return {
+    ...postData,
+    recipe: {
+      id: recipeData.id,
+      postId: recipeData.post_id,
+      title: recipeData.title,
+      description: recipeData.description,
+      ingredients: recipeData.ingredients,
+      steps: recipeData.steps,
+      cookingTime: recipeData.cooking_time,
+      servings: recipeData.servings,
+      mealType: recipeData.meal_type,
+      storageType: recipeData.storage_type,
+      storageDays: recipeData.storage_days,
+      difficulty: recipeData.difficulty,
+      tags: recipeData.tags,
+      createdAt: recipeData.created_at,
+      updatedAt: recipeData.updated_at,
+    }
+  };
 };
